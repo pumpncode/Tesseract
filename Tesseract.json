@@ -1,0 +1,13 @@
+{
+	"id": "tesseract",
+	"name": "Tesseract",
+	"display_name": "Tesseract",
+	"author": ["hyperx"],
+	"description": "A vanilla-balanced mod that adds science and art-based Jokers and anything else I find interesting",
+	"prefix": "tes",
+	"main_file": "Tesseract.lua",
+	"priority": 0,
+	"badge_colour": "30758D",
+	"version": "0.0.1",
+	"dependencies": [],
+}
