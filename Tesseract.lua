@@ -9,7 +9,7 @@ SMODS.Joker {
     loc_txt =  	{
         name = 'Blue Java',
         text = {
-            "{C:chips}+#1#{} chips",
+            "{C:chips}+#1#{} Chips",
             "{C:green}0{} in 1 chance this",
             "card is destroyed",
             "at end of round"
@@ -108,7 +108,8 @@ SMODS.Joker {
   loc_txt = {
     name = 'Chromatic Aberration',
     text = {
-      "Scored {C:attention}Wild Cards{} become {C:dark_edition}Polychrome{}"
+      "Played {C:attention}Wild Cards{} become",
+      "{C:dark_edition}Polychrome before scoring{}"
     }
   },
   rarity = 3,
@@ -147,8 +148,8 @@ SMODS.Joker {
     text = {
       "If played hand contains",
       "exactly {C:attention}three{} cards and",
-      "one {C:attention}3{}, {C:attention}transform{} played cards",
-      "into that {C:attention}3{}",
+      "one {C:attention}3{}, {C:attention}transform{} ",
+      "played cards into that {C:attention}3{}",
       "{C:inactive}(After scoring){}"
     }
   },
@@ -182,8 +183,8 @@ SMODS.Joker {
     name = 'Waterfall',
     text = {
       "{C:mult}+#1#{} discard per round",
-      "Gains {C:chips}+#2#{} chips when",
-      "a {C:attention}discard {}is used",
+      "Gains {C:chips}+#2#{} Chips when",
+      "a {C:attention}3 {}or {C:attention}9{} is discarded",
       "{C:inactive}(Currently {}{C:chips}+#3#{} {C:inactive}chips){}"
     }
   },
@@ -191,7 +192,7 @@ SMODS.Joker {
   atlas = 'T.Jokers',
   pos = { x = 1, y = 1 },
   cost = 8,
-  config = { extra = { d_size = 1, chips = 0, chips_mod = 3, first = 0} },
+  config = { extra = { d_size = 1, chips = 0, chips_mod = 3 } },
   loc_vars = function(self, info_queue, card)
     return { vars = { card.ability.extra.d_size, card.ability.extra.chips_mod, card.ability.extra.chips } }
   end,
@@ -207,22 +208,20 @@ SMODS.Joker {
   end,
   -- Because all the functionality is in remove_from_deck and add_to deck, calculate is unnecessary.
   calculate = function(self, card, context)
-    if context.pre_discard and not context.blueprint then
-      card:juice_up(0.3, 0.4)
-      card.ability.extra.chips = card.ability.extra.chips + card.ability.extra.chips_mod
-      card.ability.extra.first = 0
-    end
-    if context.discard and card.ability.extra.first == 0 then
-      card.ability.extra.first = 1
-      return {
-        message = localize('k_upgrade_ex'),
-        colour = G.C.CHIPS,
-      }
+    if context.discard and not context.blueprint and not context.other_card.debuff then 
+      if context.other_card:get_id() == 3 or context.other_card:get_id() == 9 then
+        card.ability.extra.chips = card.ability.extra.chips + card.ability.extra.chips_mod
+        return {
+          message = localize('k_upgrade_ex'),
+          colour = G.C.CHIPS,
+          message_card = card
+        }
+      end
     end
     if context.joker_main then
       return {
         message = localize{type='variable',key='a_chips',vars={card.ability.extra.chips}},
-        chip_mod = card.ability.extra.chips,
+        chips = card.ability.extra.chips,
         colour = G.C.CHIPS
       }
     end
@@ -235,14 +234,14 @@ SMODS.Joker {
   loc_txt =  {
     name = 'Dada Joker',
     text = {
-      "{C:chips}+#1#{} chips for each {C:attention}Joker{}"
+      "{C:chips}+#1#{} Chips for each {C:attention}Joker card{}"
     }
   },
   rarity = 1,
   atlas = 'T.Jokers',
   pos = { x = 2, y = 1 },
   cost = 5,
-  config = { extra = { chips_add = 25 } },
+  config = { extra = { chips_add = 20 } },
   loc_vars = function(self, info_queue, card)
     local total_cards = (G.jokers and #G.jokers.cards or 0)
     return { vars = { card.ability.extra.chips_add, total_cards*card.ability.extra.chips_add } }
@@ -266,7 +265,7 @@ SMODS.Joker {
   loc_txt = {
     name = 'Impossibility',
     text = {
-      "{X:mult,C:white}X#1#{} Mult if played hand",
+      "{X:mult,C:white}X#1#{} Mult if scored hand",
       "contains a {C:attention}2{} and an {C:attention}8{}"
     }
   },
@@ -319,8 +318,6 @@ SMODS.Joker {
   rarity = 2,
   cost = 7,
   calculate = function(self, card, context)
-    -- Checks that the current cardarea is G.play, or the cards that have been played, then checks to see if it's time to check for repetition.
-    -- The "not context.repetition_only" is there to keep it separate from seals.
     if context.cardarea == G.play and context.repetition and not context.repetition_only then
       -- context.other_card is something that's used when either context.individual or context.repetition is true
       -- It is each card 1 by 1, but in other cases, you'd need to iterate over the scoring hand to check which cards are there.
@@ -334,5 +331,91 @@ SMODS.Joker {
       end
     end
   end
+  
 
 }
+SMODS.Joker {
+  key = 'jimbette',
+  loc_txt = {
+    name = 'Jimbette',
+    text = {
+      "Gains {C:mult}+#1# {}Mult for every",
+      "{C:attention}7{} {C:hearts}Hearts{} scored {C:inactive}({C:attention}#3#{C:inactive} left)",
+      "{C:inactive}(Currently{} {C:mult}+#2#{C:inactive} Mult)"
+    }
+  },
+  cost = 6,
+  perishable_compat = false,
+  blueprint_compat = true,
+  rarity = 2,
+  atlas = 'T.Jokers',
+  pos = { x = 4, y = 1 },
+  config = { extra = { mult = 0, mult_gain = 4, num = 0, jh = 7 } },
+  loc_vars = function(self, info_queue, card)
+    return {vars = { card.ability.extra.mult_gain, card.ability.extra.mult, card.ability.extra.jh } }
+  end,
+  calculate = function(self, card, context)
+    if not context.blueprint then
+      if context.individual and context.cardarea == G.play then
+        if context.other_card:is_suit("Hearts") then
+          card.ability.extra.num = card.ability.extra.num + 1
+          card.ability.extra.jh = card.ability.extra.jh - 1
+        end
+        if card.ability.extra.num >= 7 then 
+          card.ability.extra.mult = card.ability.extra.mult + card.ability.extra.mult_gain
+          card.ability.extra.num = 0
+          card.ability.extra.jh = 7
+          return {
+            message = localize('k_upgrade_ex'),
+            colour = G.C.MULT,
+          }
+        end
+      end
+    end
+    if context.joker_main then
+      return {
+        mult = card.ability.extra.mult
+      }
+    end
+  end
+}
+SMODS.Joker {
+  key = 'conduit',
+  loc_txt = {
+    name = 'Conduit',
+    text = {
+      "Scored {C:attention}Mult{} cards",
+      "give {C:chips}+#1#{} Chips",
+      "Scored {C:attention}Bonus{} cards",
+      "give {C:mult}+#2#{} Mult"
+    }
+  },
+  cost = 4,
+  rarity = 1,
+  atlas = 'T.Jokers',
+  pos = { x = 5, y = 0 },
+  config = { extra = { chips = 30, mult = 4 } },
+  loc_vars = function(self, info_queue, card)
+    return {vars = { card.ability.extra.chips, card.ability.extra.mult } }
+  end,
+  calculate = function(self, card, context)
+    -- Checks that the current cardarea is G.play, or the cards that have been played, then checks to see if it's time to check for repetition.
+    -- The "not context.repetition_only" is there to keep it separate from seals.
+    if context.individual and context.cardarea == G.play then
+      -- context.other_card is something that's used when either context.individual or context.repetition is true
+      -- It is each card 1 by 1, but in other cases, you'd need to iterate over the scoring hand to check which cards are there.
+      if context.other_card.ability.name == "Bonus" then
+        return {
+          mult = card.ability.extra.mult,
+          card = context.other_card
+        }
+      elseif context.other_card.ability.name == "Mult" then
+        return {
+          chips = card.ability.extra.chips,
+          card = context.other_card
+        }
+      end
+    end
+  end
+}
+
