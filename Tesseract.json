@@ -2,7 +2,9 @@
 	"id": "tesseract",
 	"name": "Tesseract",
 	"display_name": "Tesseract",
-	"author": ["hyperx"],
+	"author": [
+		"hyperx"
+	],
 	"description": "A vanilla-balanced mod that adds 15 Jokers so far, with interesting effects",
 	"prefix": "tes",
 	"main_file": "Tesseract.lua",
